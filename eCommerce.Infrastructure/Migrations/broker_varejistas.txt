@@ -1,0 +1,17 @@
+modelBuilder.Entity("eCommerce.Domain.Entities.Brokers_Varejistas.Brokers_Varejistas", b =>
+                {
+                    b.Property<int>("IdSequencial")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<int>("IdBroker")
+                        .HasColumnType("int");
+
+                    b.Property<int>("IdVarejista")
+                        .HasColumnType("int");
+
+                    b.HasKey("IdSequencial");
+
+                    b.ToTable("Brokers_Varejistas");
+                });

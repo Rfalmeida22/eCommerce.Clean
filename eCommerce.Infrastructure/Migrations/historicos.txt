@@ -1,0 +1,36 @@
+modelBuilder.Entity("eCommerce.Domain.Entities.Historicos.Historicos", b =>
+                {
+                    b.Property<int>("Historicos_Cod")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<string>("Historicos_Aca")
+                        .IsRequired()
+                        .HasMaxLength(1)
+                        .HasColumnType("nvarchar(1)");
+
+                    b.Property<DateTime>("Historicos_Dat")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValue(new DateTime(2022, 10, 30, 17, 25, 10, 457, DateTimeKind.Local).AddTicks(4796));
+
+                    b.Property<string>("Historicos_Det")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Historicos_Tab")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int>("IdEmpresa")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Usuarios_Cod")
+                        .HasColumnType("int");
+
+                    b.HasKey("Historicos_Cod");
+
+                    b.ToTable("Historicos");
+                });

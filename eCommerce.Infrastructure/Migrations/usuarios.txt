@@ -1,0 +1,58 @@
+modelBuilder.Entity("eCommerce.Domain.Entities.Usuarios.Usuarios", b =>
+                {
+                    b.Property<int>("Usuarios_Cod")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<int>("IdBroker")
+                        .HasColumnType("int");
+
+                    b.Property<int>("IdLoja")
+                        .HasColumnType("int");
+
+                    b.Property<int>("IdVarejista")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SenhaAnterior")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<bool>("Usuarios_Ati")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<DateTime>("Usuarios_DatCad")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValue(new DateTime(2022, 10, 30, 17, 25, 10, 612, DateTimeKind.Local).AddTicks(1808));
+
+                    b.Property<string>("Usuarios_Ema")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Usuarios_EmpPad")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1);
+
+                    b.Property<string>("Usuarios_Nom")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Usuarios_Sen")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<bool>("Usuarios_VisAutcom")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("Usuarios_VisAutemp")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Usuarios_Cod");
+
+                    b.ToTable("Usuarios");
+                });

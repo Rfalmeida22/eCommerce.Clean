@@ -1,0 +1,20 @@
+modelBuilder.Entity("eCommerce.Domain.Entities.BannerBackground.BannerBackground", b =>
+                {
+                    b.Property<decimal>("CodBackground")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Background")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<decimal>("CodEmpresas")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("LinkBackground")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.HasKey("CodBackground");
+
+                    b.ToTable("BannerBackground");
+                });

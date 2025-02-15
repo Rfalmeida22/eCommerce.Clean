@@ -1,0 +1,14 @@
+modelBuilder.Entity("eCommerce.Domain.Entities.AreasExibicao.AreasExibicao", b =>
+                {
+                    b.Property<decimal>("IdArea")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("IdArea");
+
+                    b.ToTable("AreasExibicao");
+                });
