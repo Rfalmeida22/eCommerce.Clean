@@ -1,6 +1,5 @@
 ﻿using eCommerce.Domain.Common;
 using eCommerce.Domain.Exceptions;
-using eCommerce.Domain.Events;
 
 namespace eCommerce.Domain.Entities
 {
@@ -9,14 +8,7 @@ namespace eCommerce.Domain.Entities
     /// </summary>
     public class Broker : BaseEntity
     {
-        #region Constants
-        private const int NOME_MAX_LENGTH = 100;
-        private const string NOME_REQUIRED_MESSAGE = "Nome do broker é obrigatório";
-        private const string NOME_LENGTH_MESSAGE = "Nome do broker deve ter no máximo 100 caracteres";
-        private const string ID_BROKER_REQUIRED_MESSAGE = "Id do broker deve ser maior que zero";
-        #endregion
-
-        #region Properties
+        #region Propriedades
         /// <summary>
         /// Identificador único do broker
         /// </summary>
@@ -28,7 +20,7 @@ namespace eCommerce.Domain.Entities
         public string NmBroker { get; protected set; }
         #endregion
 
-        #region Constructors
+        #region Construtores
         /// <summary>
         /// Construtor protegido para uso do Entity Framework
         /// </summary>
@@ -41,46 +33,28 @@ namespace eCommerce.Domain.Entities
         /// <exception cref="DomainException">Lançada quando o nome é inválido</exception>
         public Broker(string nmBroker)
         {
-            var errors = new List<string>();
-            ValidateNome(nmBroker, errors);
-
-            if (errors.Any())
-                throw new DomainException(string.Join(", ", errors));
-
             NmBroker = nmBroker;
+
+            var validationResult = Validar();
+
+            if (!validationResult.IsValid)
+                throw new DomainException(string.Join(", ", validationResult.Errors));
+
             IsActive = true;
             CreatedAt = DateTime.UtcNow;
         }
         #endregion
 
-        #region Methods
+        #region Métodos
         /// <summary>
         /// Valida o estado atual da entidade
         /// </summary>
         /// <returns>Resultado da validação</returns>
         public ValidationResult Validar()
         {
-            var errors = new List<string>();
-
-            ValidateNome(NmBroker, errors);
-            ValidateId(errors);
-
-            return new ValidationResult(errors.Count == 0, errors);
-        }
-
-        private void ValidateNome(string nome, List<string> errors)
-        {
-            if (string.IsNullOrWhiteSpace(nome))
-                errors.Add(NOME_REQUIRED_MESSAGE);
-
-            if (nome?.Length > 100)
-                errors.Add(NOME_LENGTH_MESSAGE);
-        }
-
-        private void ValidateId(List<string> errors)
-        {
-            if (IdBroker <= 0)
-                errors.Add(ID_BROKER_REQUIRED_MESSAGE);
+            var validation = new Validations.Broker(this);
+            validation.Validate();
+            return validation.GetValidationResult();
         }
 
         /// <summary>
@@ -90,13 +64,13 @@ namespace eCommerce.Domain.Entities
         /// <exception cref="DomainException">Lançada quando o novo nome é inválido</exception>
         public void AtualizarNome(string novoNome)
         {
-            var errors = new List<string>();
-            ValidateNome(novoNome, errors);
-
-            if (errors.Any())
-                throw new DomainException(string.Join(", ", errors));
-
             NmBroker = novoNome;
+
+            var validationResult = Validar();
+
+            if (!validationResult.IsValid)
+                throw new DomainException(string.Join(", ", validationResult.Errors));
+
             UpdatedAt = DateTime.UtcNow;
         }
 
@@ -123,7 +97,7 @@ namespace eCommerce.Domain.Entities
             broker.SetCreatedBy(createdBy);
 
             // Adicionar evento
-            broker.AddDomainEvent(new Broker(
+            broker.AddDomainEvent(new Events.Broker(
                 broker.IdBroker,
                 broker.NmBroker,
                 createdBy));

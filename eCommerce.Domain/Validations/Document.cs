@@ -1,3 +1,5 @@
+using System.Text.RegularExpressions;
+
 namespace eCommerce.Domain.Validations
 {
     public static class Document

@@ -1,3 +1,4 @@
+using eCommerce.Domain.Exceptions;
 using System.Text.RegularExpressions;
 
 namespace eCommerce.Domain.ValueObjects

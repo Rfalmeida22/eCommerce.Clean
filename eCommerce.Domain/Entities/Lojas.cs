@@ -1,4 +1,6 @@
 ﻿using eCommerce.Domain.Common;
+using eCommerce.Domain.Exceptions;
+using eCommerce.Domain.ValueObjects;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,12 +14,8 @@ namespace eCommerce.Domain.Entities
     /// </summary>
     public class Lojas : BaseEntity
     {
-        private const int CNPJ_MAX_LENGTH = 50;
-        private const int CODIGO_MAX_LENGTH = 50;
-        private const int NOME_MAX_LENGTH = 100;
-        private const int ENDERECO_MAX_LENGTH = 255;
-        private const string NOME_REQUIRED_MESSAGE = "Nome da loja é obrigatório";
 
+        #region Properties
         /// <summary>
         /// Identificador único da loja
         /// </summary>
@@ -59,7 +57,9 @@ namespace eCommerce.Domain.Entities
         /// Endereço da loja
         /// </summary>
         public string TxEndereco { get; protected set; }
+        #endregion
 
+        #region Constructors
         /// <summary>
         /// Construtor protegido para uso do Entity Framework
         /// </summary>
@@ -76,8 +76,6 @@ namespace eCommerce.Domain.Entities
             string nmLoja,
             string txEndereco)
         {
-            ValidarDados(cdLoja, idLojista, idVarejista, nmLoja, txEndereco);
-            
             // Usando Value Object
             CdCnpj = cdCnpj; // Usa o setter que valida através do Value Object
 
@@ -86,77 +84,25 @@ namespace eCommerce.Domain.Entities
             IdVarejista = idVarejista;
             NmLoja = nmLoja;
             TxEndereco = txEndereco;
-        }
 
+            var validationResult = Validar();
+
+            if (!validationResult.IsValid)
+                throw new DomainException(string.Join(", ", validationResult.Errors));
+
+        }
+        #endregion
+
+        #region Methods
         /// <summary>
         /// Valida o estado atual da entidade
         /// </summary>
         /// <returns>Resultado da validação</returns>
         public ValidationResult Validar()
         {
-            var erros = new List<string>();
-
-            try
-            {
-                // Revalidar usando Value Object
-                if (!string.IsNullOrEmpty(CdCnpj))
-                    Cnpj = Cnpj.Create(CdCnpj);
-
-                ValidarDados(CdLoja, IdLojista, IdVarejista, NmLoja, TxEndereco);
-            }
-            catch (DomainException ex)
-            {
-                erros.Add(ex.Message);
-            }
-
-            return new ValidationResult(erros.Count == 0, erros);
-        }
-
-        private ValidationResult ValidarDados(
-            string cdLoja,
-            int idLojista,
-            int idVarejista,
-            string nmLoja,
-            string txEndereco)
-        {
-            var erros = new List<string>();
-
-            ValidateCodigoLoja(cdLoja, erros);
-            ValidateIds(idLojista, idVarejista, erros);
-            ValidateNome(nmLoja, erros);
-            ValidateEndereco(txEndereco, erros);
-
-            return new ValidationResult(erros.Count == 0, erros);
-        }
-
-        private void ValidateCodigoLoja(string codigo, List<string> errors)
-        {
-            if (!string.IsNullOrEmpty(codigo) && codigo.Length > CODIGO_MAX_LENGTH)
-                errors.Add($"Código da loja deve ter no máximo {CODIGO_MAX_LENGTH} caracteres");
-        }
-
-        private void ValidateIds(int idLojista, int idVarejista, List<string> errors)
-        {
-            if (idLojista < 0)
-                errors.Add("IdLojista deve ser maior ou igual a zero");
-
-            if (idVarejista < 0)
-                errors.Add("IdVarejista deve ser maior ou igual a zero");
-        }
-
-        private void ValidateNome(string nome, List<string> errors)
-        {
-            if (string.IsNullOrWhiteSpace(nome))
-                errors.Add(NOME_REQUIRED_MESSAGE);
-
-            if (!string.IsNullOrEmpty(nome) && nome.Length > NOME_MAX_LENGTH)
-                errors.Add($"Nome da loja deve ter no máximo {NOME_MAX_LENGTH} caracteres");
-        }
-
-        private void ValidateEndereco(string endereco, List<string> errors)
-        {
-            if (!string.IsNullOrEmpty(endereco) && endereco.Length > ENDERECO_MAX_LENGTH)
-                errors.Add($"Endereço deve ter no máximo {ENDERECO_MAX_LENGTH} caracteres");
+            var validation = new Validations.Loja(this);
+            validation.Validate();
+            return validation.GetValidationResult();
         }
 
         /// <summary>
@@ -171,14 +117,19 @@ namespace eCommerce.Domain.Entities
             string txEndereco,
             string updatedBy)
         {
-            ValidarDados(cdLoja, idLojista, idVarejista, nmLoja, txEndereco);
-
             CdCnpj = cdCnpj; // Usa o setter que valida através do Value Object
             CdLoja = cdLoja;
             IdLojista = idLojista;
             IdVarejista = idVarejista;
             NmLoja = nmLoja;
             TxEndereco = txEndereco;
+
+            var validationResult = Validar();
+
+            if (!validationResult.IsValid)
+                throw new DomainException(string.Join(", ", validationResult.Errors));
+
+
             SetUpdatedBy(updatedBy);
         }
 
@@ -198,24 +149,28 @@ namespace eCommerce.Domain.Entities
             loja.SetCreatedBy(createdBy);
 
             // Adicionar evento
-            loja.AddDomainEvent(new Loja(
-                loja.IdLoja,
-                loja.NmLoja,
-                loja.CdCnpj,
-                loja.IdVarejista,
-                createdBy));
+            //loja.AddDomainEvent(new Loja(
+            //    loja.IdLoja,
+            //    loja.NmLoja,
+            //    loja.CdCnpj,
+            //    loja.IdVarejista,
+            //    createdBy));
 
             return loja;
         }
+        #endregion
 
+
+        #region Navigation Properties
         /// <summary>
         /// Navegação virtual para o Lojista (Entity Framework)
         /// </summary>
-        public virtual Lojista Lojista { get; protected set; }
+        //public virtual Lojista Lojista { get; protected set; }
 
         /// <summary>
         /// Navegação virtual para o Varejista (Entity Framework)
         /// </summary>
         public virtual Varejista Varejista { get; protected set; }
+        #endregion
     }
 }

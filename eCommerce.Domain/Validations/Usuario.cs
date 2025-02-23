@@ -1,3 +1,5 @@
+using eCommerce.Domain.Entities.Usuarios;
+
 namespace eCommerce.Domain.Validations
 {
     public class Usuario : Validation
@@ -8,6 +10,10 @@ namespace eCommerce.Domain.Validations
         {
             _usuario = usuario;
 
+        }
+
+        public void Validate()
+        {
             ValidateRequired(_usuario.Usuarios_Nom, "Nome");
             ValidateMaxLength(_usuario.Usuarios_Nom, 100, "Nome");
             ValidateEmail(_usuario.Usuarios_Ema, "Email");

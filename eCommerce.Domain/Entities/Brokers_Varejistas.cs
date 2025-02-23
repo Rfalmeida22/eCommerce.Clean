@@ -13,9 +13,12 @@ namespace eCommerce.Domain.Entities
     /// </summary>
     public class Brokers_Varejistas : BaseEntity
     {
+        #region Constants
         private const string ID_BROKER_INVALID = "IdBroker deve ser maior que zero";
         private const string ID_VAREJISTA_INVALID = "IdVarejista deve ser maior que zero";
+        #endregion
 
+        #region Properties
         /// <summary>
         /// Identificador único do relacionamento
         /// </summary>
@@ -30,7 +33,9 @@ namespace eCommerce.Domain.Entities
         /// Identificador do Varejista
         /// </summary>
         public int IdVarejista { get; protected set; }
+        #endregion
 
+        #region Constructors
         /// <summary>
         /// Construtor protegido para uso do Entity Framework
         /// </summary>
@@ -47,7 +52,9 @@ namespace eCommerce.Domain.Entities
             IdBroker = idBroker;
             IdVarejista = idVarejista;
         }
+        #endregion
 
+        #region Methods
         /// <summary>
         /// Valida o estado atual da entidade
         /// </summary>
@@ -87,6 +94,7 @@ namespace eCommerce.Domain.Entities
         /// </summary>
         /// <param name="brokerId">Novo ID do Broker</param>
         /// <param name="retailerId">Novo ID do Varejista</param>
+        /// <param name="updatedBy">Usuário que realizou a atualização</param>
         public void AtualizarRelacionamentos(int brokerId, int retailerId, string updatedBy)
         {
             ValidarRelacionamentos(brokerId, retailerId);
@@ -116,20 +124,41 @@ namespace eCommerce.Domain.Entities
             return relacionamento;
         }
 
+        /// <summary>
+        /// Verifica se o relacionamento é único
+        /// </summary>
+        /// <param name="existingRelationships">Lista de relacionamentos existentes</param>
+        /// <returns>True se o relacionamento é único, False caso contrário</returns>
         public bool IsUniqueRelationship(IEnumerable<Brokers_Varejistas> existingRelationships)
         {
-            return !existingRelationships.Any(r => 
-                r.IdBroker == IdBroker && 
-                r.IdVarejista == IdVarejista && 
+            return !existingRelationships.Any(r =>
+                r.IdBroker == IdBroker &&
+                r.IdVarejista == IdVarejista &&
                 r.Id != Id);
         }
 
+        /// <summary>
+        /// Verifica se o relacionamento é o mesmo
+        /// </summary>
+        /// <param name="brokerId">ID do Broker</param>
+        /// <param name="varejistaId">ID do Varejista</param>
+        /// <returns>True se o relacionamento é o mesmo, False caso contrário</returns>
         public bool HasSameRelationship(int brokerId, int varejistaId)
         {
             return IdBroker == brokerId && IdVarejista == varejistaId;
         }
+        #endregion
 
+        #region Navigation Properties
+        /// <summary>
+        /// Broker associado ao relacionamento
+        /// </summary>
         public virtual Broker Broker { get; protected set; }
+
+        /// <summary>
+        /// Varejista associado ao relacionamento
+        /// </summary>
         public virtual Varejista Varejista { get; protected set; }
+        #endregion
     }
 }

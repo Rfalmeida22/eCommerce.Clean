@@ -9,6 +9,7 @@ using eCommerce.Domain.Common;
 using eCommerce.Domain.ValueObjects;
 using eCommerce.Domain.Events;
 using eCommerce.Domain.Validations;
+using eCommerce.Domain.Exceptions;
 
 namespace eCommerce.Domain.Entities.Usuarios
 {
@@ -22,6 +23,7 @@ namespace eCommerce.Domain.Entities.Usuarios
         private const int SENHA_MAX_LENGTH = 200;
         private const string EMAIL_REGEX = @"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$";
 
+        #region Propriedades
         /// <summary>
         /// Código identificador do usuário
         /// </summary>
@@ -60,10 +62,10 @@ namespace eCommerce.Domain.Entities.Usuarios
         /// <summary>
         /// Email do usuário
         /// </summary>
-        public string Usuarios_Ema 
-        { 
-            get => Email?.Address; 
-            protected set => Email = Email.Create(value); 
+        public string Usuarios_Ema
+        {
+            get => Email?.Address;
+            protected set => Email = ValueObjects.Email.Create(value);
         }
 
         /// <summary>
@@ -88,7 +90,11 @@ namespace eCommerce.Domain.Entities.Usuarios
         /// <summary>
         /// Senha do usuário
         /// </summary>
-        public string Usuarios_Sen { get; protected set; }
+        public string Usuarios_Sen
+        {
+            get => Senha?.Value;
+            protected set => Senha = Senha.Create(value);
+        }
 
         /// <summary>
         /// Permissão de visualização automática comercial
@@ -101,9 +107,12 @@ namespace eCommerce.Domain.Entities.Usuarios
         public bool Usuarios_VisAutemp { get; protected set; }
 
         // Value Objects internos
-        private Email Email { get; set; }
+        private ValueObjects.Email Email { get; set; }
         private Cpf Cpf { get; set; }
+        private Senha Senha { get; set; }
+        #endregion
 
+        #region Construtores
         /// <summary>
         /// Construtor protegido para uso do Entity Framework
         /// </summary>
@@ -121,92 +130,36 @@ namespace eCommerce.Domain.Entities.Usuarios
             int idLoja = 0,
             int idVarejista = 0)
         {
-            ValidateNome(nome);
-            ValidateSenha(senha);
-            ValidateIds(idBroker, idLoja, idVarejista);
-
-            // Usando os Value Objects internamente
-            Email = Email.Create(email);
-            Cpf = Cpf.Create(cpf);
-
             Usuarios_Nom = nome;
             Usuarios_Ema = email; // Isso vai usar o setter que cria o Email Value Object
-            Usuarios_Sen = HashSenha(senha);
+            Usuarios_Cpf = cpf;  // Isso vai usar o setter que cria o Cpf Value Object
+            Usuarios_Sen = senha; // Isso vai usar o setter que cria o Senha Value Object
             IdBroker = idBroker;
             IdLoja = idLoja;
             IdVarejista = idVarejista;
+
+            var validationResult = Validar();
+
+            if (!validationResult.IsValid)
+                throw new DomainException(string.Join(", ", validationResult.Errors));
+
             Usuarios_Ati = true;
             Usuarios_DatCad = DateTime.UtcNow;
             Usuarios_EmpPad = 1;
         }
+        #endregion
 
+        #region Métodos
         /// <summary>
         /// Valida o estado atual da entidade
         /// </summary>
         public ValidationResult Validar()
         {
-            var validation = new UsuarioValidation(this);
+            var validation = new Validations.Usuario(this);
+            validation.Validate();
             return validation.GetValidationResult();
         }
 
-        private class UsuarioValidation : Validation
-        {
-            private readonly Usuarios _usuario;
-
-            public UsuarioValidation(Usuarios usuario)
-            {
-                _usuario = usuario;
-
-                ValidateRequired(_usuario.Usuarios_Nom, "Nome");
-                ValidateMaxLength(_usuario.Usuarios_Nom, 100, "Nome");
-                ValidateEmail(_usuario.Usuarios_Ema, "Email");
-                ValidateRequired(_usuario.Usuarios_Sen, "Senha");
-                ValidateMaxLength(_usuario.Usuarios_Sen, 200, "Senha");
-                ValidateCPF(_usuario.Usuarios_Cpf, "CPF");
-            }
-        }
-
-        private void ValidateNome(string nome)
-        {
-            if (string.IsNullOrWhiteSpace(nome))
-                throw new DomainException("Nome é obrigatório");
-
-            if (nome.Length > NOME_MAX_LENGTH)
-                throw new DomainException($"Nome deve ter no máximo {NOME_MAX_LENGTH} caracteres");
-        }
-
-        private void ValidateEmail(string email)
-        {
-            if (string.IsNullOrWhiteSpace(email))
-                throw new DomainException("Email é obrigatório");
-
-            if (email.Length > EMAIL_MAX_LENGTH)
-                throw new DomainException($"Email deve ter no máximo {EMAIL_MAX_LENGTH} caracteres");
-
-            if (!Regex.IsMatch(email, EMAIL_REGEX))
-                throw new DomainException("Email inválido");
-        }
-
-        private void ValidateSenha(string senha)
-        {
-            if (string.IsNullOrWhiteSpace(senha))
-                throw new DomainException("Senha é obrigatória");
-
-            if (senha.Length > SENHA_MAX_LENGTH)
-                throw new DomainException($"Senha deve ter no máximo {SENHA_MAX_LENGTH} caracteres");
-        }
-
-        private void ValidateIds(int idBroker, int idLoja, int idVarejista)
-        {
-            if (idBroker < 0)
-                throw new DomainException("IdBroker deve ser maior ou igual a zero");
-
-            if (idLoja < 0)
-                throw new DomainException("IdLoja deve ser maior ou igual a zero");
-
-            if (idVarejista < 0)
-                throw new DomainException("IdVarejista deve ser maior ou igual a zero");
-        }
 
         /// <summary>
         /// Atualiza os dados do usuário
@@ -218,18 +171,21 @@ namespace eCommerce.Domain.Entities.Usuarios
             string senha,
             string updatedBy)
         {
-            ValidateNome(nome);
-            
-            if (!string.IsNullOrEmpty(senha))
-            {
-                ValidateSenha(senha);
-                SenhaAnterior = Usuarios_Sen;
-                Usuarios_Sen = HashSenha(senha);
-            }
-
             Usuarios_Nom = nome;
             Usuarios_Ema = email; // Usa o setter que valida através do Value Object
-            Usuarios_Cpf = cpf;   // Usa o setter que valida através do Value Object
+            Usuarios_Cpf = cpf;  // Usa o setter que valida através do Value Object
+
+            if (!string.IsNullOrEmpty(senha))
+            {
+                SenhaAnterior = Usuarios_Sen;
+                Usuarios_Sen = senha;
+            }
+
+            var validationResult = Validar();
+
+            if (!validationResult.IsValid)
+                throw new DomainException(string.Join(", ", validationResult.Errors));
+
             SetUpdatedBy(updatedBy);
         }
 
@@ -251,21 +207,12 @@ namespace eCommerce.Domain.Entities.Usuarios
             SetUpdatedBy(updatedBy);
 
             // Adicionar evento
-            AddDomainEvent(new UsuarioDesativado(
-                Usuarios_Cod,
-                Usuarios_Nom,
-                updatedBy));
+            //AddDomainEvent(new UsuarioDesativado(
+            //    Usuarios_Cod,
+            //    Usuarios_Nom,
+            //    updatedBy));
         }
 
-        private string HashSenha(string senha)
-        {
-            using (var sha256 = SHA256.Create())
-            {
-                var bytes = Encoding.UTF8.GetBytes(senha);
-                var hash = sha256.ComputeHash(bytes);
-                return Convert.ToBase64String(hash);
-            }
-        }
 
         /// <summary>
         /// Cria uma nova instância de usuário
@@ -284,15 +231,17 @@ namespace eCommerce.Domain.Entities.Usuarios
             usuario.SetCreatedBy(createdBy);
             
             // Adicionar evento
-            usuario.AddDomainEvent(new Usuario(
-                usuario.Usuarios_Cod,
-                usuario.Usuarios_Nom,
-                usuario.Usuarios_Ema,
-                createdBy));
+            //usuario.AddDomainEvent(new Usuario(
+            //    usuario.Usuarios_Cod,
+            //    usuario.Usuarios_Nom,
+            //    usuario.Usuarios_Ema,
+            //    createdBy));
 
             return usuario;
         }
+        #endregion
 
+        #region Navegação
         /// <summary>
         /// Navegação virtual para o Broker (Entity Framework)
         /// </summary>
@@ -307,5 +256,7 @@ namespace eCommerce.Domain.Entities.Usuarios
         /// Navegação virtual para o Varejista (Entity Framework)
         /// </summary>
         public virtual Varejista Varejista { get; protected set; }
+
+        #endregion
     }
 }

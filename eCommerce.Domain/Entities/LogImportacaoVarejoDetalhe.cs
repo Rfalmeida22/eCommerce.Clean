@@ -1,9 +1,6 @@
 ﻿using eCommerce.Domain.Common;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using eCommerce.Domain.Exceptions;
+using eCommerce.Domain.ValueObjects;
 
 namespace eCommerce.Domain.Entities
 {
@@ -12,6 +9,7 @@ namespace eCommerce.Domain.Entities
     /// </summary>
     public class LogImportacaoVarejoDetalhe : BaseEntity
     {
+        #region Constantes
         private const int BROKER_MAX_LENGTH = 255;
         private const int CARTAO_MAX_LENGTH = 255;
         private const int CPF_MAX_LENGTH = 11;
@@ -20,7 +18,16 @@ namespace eCommerce.Domain.Entities
         private const int STATUS_MAX_LENGTH = 100;
         private const int VAREJISTA_MAX_LENGTH = 255;
         private const int VENDEDOR_MAX_LENGTH = 255;
+        private const string BROKER_REQUIRED = "Broker é obrigatório";
+        private const string CARTAO_REQUIRED = "CdCartao é obrigatório";
+        private const string CPF_REQUIRED = "CpfComprador é obrigatório";
+        private const string LOJA_REQUIRED = "Loja é obrigatório";
+        private const string STATUS_REQUIRED = "Status é obrigatório";
+        private const string VAREJISTA_REQUIRED = "Varejista é obrigatório";
+        private const string VENDEDOR_REQUIRED = "Vendedor é obrigatório";
+        #endregion
 
+        #region Propriedades
         /// <summary>
         /// Identificador único do detalhe da importação
         /// </summary>
@@ -39,10 +46,10 @@ namespace eCommerce.Domain.Entities
         /// <summary>
         /// CPF do comprador
         /// </summary>
-        public string CpfComprador 
-        { 
-            get => Cpf?.Value; 
-            protected set => Cpf = Cpf.Create(value); 
+        public string CpfComprador
+        {
+            get => Cpf?.Value;
+            protected set => Cpf = Cpf.Create(value);
         }
 
         // Value Object interno
@@ -102,7 +109,9 @@ namespace eCommerce.Domain.Entities
         /// Construtor protegido para uso do Entity Framework
         /// </summary>
         protected LogImportacaoVarejoDetalhe() { }
+        #endregion
 
+        #region Métodos
         /// <summary>
         /// Cria uma nova instância de LogImportacaoVarejoDetalhe
         /// </summary>
@@ -121,8 +130,11 @@ namespace eCommerce.Domain.Entities
             string varejista,
             string vendedor)
         {
-            ValidarDados(broker, cdCartao, cpfComprador, dataCancelamento, dataCriacao,
-                dataValidade, dataVenda, idLog, loja, observacao, status, varejista, vendedor);
+            var validationResult = Validar();
+            if (!validationResult.IsValid)
+            {
+                throw new DomainException(string.Join(", ", validationResult.Errors));
+            }
 
             Broker = broker;
             CdCartao = cdCartao;
@@ -149,15 +161,15 @@ namespace eCommerce.Domain.Entities
 
             try
             {
-                ValidateStringLength(Broker, "Broker", BROKER_MAX_LENGTH, erros);
-                ValidateStringLength(CdCartao, "CdCartao", CARTAO_MAX_LENGTH, erros);
+                ValidateStringLength(Broker, "Broker", BROKER_MAX_LENGTH, erros, BROKER_REQUIRED);
+                ValidateStringLength(CdCartao, "CdCartao", CARTAO_MAX_LENGTH, erros, CARTAO_REQUIRED);
                 ValidateCpf(CpfComprador, erros);
                 ValidateLogId(IdLog, erros);
-                ValidateStringLength(Loja, "Loja", LOJA_MAX_LENGTH, erros);
+                ValidateStringLength(Loja, "Loja", LOJA_MAX_LENGTH, erros, LOJA_REQUIRED);
                 ValidateStringLength(Observacao, "Observacao", OBSERVACAO_MAX_LENGTH, erros);
-                ValidateStringLength(Status, "Status", STATUS_MAX_LENGTH, erros);
-                ValidateStringLength(Varejista, "Varejista", VAREJISTA_MAX_LENGTH, erros);
-                ValidateStringLength(Vendedor, "Vendedor", VENDEDOR_MAX_LENGTH, erros);
+                ValidateStringLength(Status, "Status", STATUS_MAX_LENGTH, erros, STATUS_REQUIRED);
+                ValidateStringLength(Varejista, "Varejista", VAREJISTA_MAX_LENGTH, erros, VAREJISTA_REQUIRED);
+                ValidateStringLength(Vendedor, "Vendedor", VENDEDOR_MAX_LENGTH, erros, VENDEDOR_REQUIRED);
                 ValidateDates(DataCriacao, DataValidade, DataVenda, DataCancelamento, erros);
 
                 // Revalidar usando Value Object
@@ -179,10 +191,19 @@ namespace eCommerce.Domain.Entities
                 errors.Add("IdLog deve ser maior ou igual a zero");
         }
 
-        private void ValidateStringLength(string value, string fieldName, int maxLength, List<string> errors)
+        private void ValidateStringLength(string value, string fieldName, int maxLength, List<string> errors, string requiredMessage = null)
         {
-            if (!string.IsNullOrEmpty(value) && value.Length > maxLength)
+            if (string.IsNullOrEmpty(value))
+            {
+                if (!string.IsNullOrEmpty(requiredMessage))
+                {
+                    errors.Add(requiredMessage);
+                }
+            }
+            else if (value.Length > maxLength)
+            {
                 errors.Add($"{fieldName} deve ter no máximo {maxLength} caracteres");
+            }
         }
 
         private void ValidateCpf(string cpf, List<string> errors)
@@ -195,6 +216,10 @@ namespace eCommerce.Domain.Entities
                 if (!IsCpfValid(cpf))
                     errors.Add("CPF inválido");
             }
+            else
+            {
+                errors.Add(CPF_REQUIRED);
+            }
         }
 
         private bool IsCpfValid(string cpf)
@@ -203,7 +228,7 @@ namespace eCommerce.Domain.Entities
             return true; // Temporário
         }
 
-        private void ValidateDates(DateTime dataCriacao, DateTime dataValidade, DateTime dataVenda, 
+        private void ValidateDates(DateTime dataCriacao, DateTime dataValidade, DateTime dataVenda,
             DateTime? dataCancelamento, List<string> errors)
         {
             if (dataValidade < dataCriacao)
@@ -235,8 +260,11 @@ namespace eCommerce.Domain.Entities
             string vendedor,
             string updatedBy)
         {
-            ValidarDados(broker, cdCartao, cpfComprador, dataCancelamento, dataCriacao,
-                dataValidade, dataVenda, idLog, loja, observacao, status, varejista, vendedor);
+            var validationResult = Validar();
+            if (!validationResult.IsValid)
+            {
+                throw new DomainException(string.Join(", ", validationResult.Errors));
+            }
 
             Broker = broker;
             CdCartao = cdCartao;
@@ -278,5 +306,6 @@ namespace eCommerce.Domain.Entities
             log.SetCreatedBy(createdBy);
             return log;
         }
+        #endregion
     }
 }
