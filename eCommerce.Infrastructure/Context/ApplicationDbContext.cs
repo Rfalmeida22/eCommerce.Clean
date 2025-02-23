@@ -10,13 +10,23 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.Extensions.Configuration;
+using System.Reflection;
+using eCommerce.Infrastructure.Config;
 
 namespace eCommerce.Infrastructure.Context
 {
     public class ApplicationDbContext : DbContext
     {
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+
+        private readonly IConfiguration _configuration;
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IConfiguration configuration)
             : base(options)
+        {
+            _configuration = configuration;
+        }
+
+        public ApplicationDbContext()
         {
         }
 
@@ -24,8 +34,8 @@ namespace eCommerce.Infrastructure.Context
         {
             if (!optionsBuilder.IsConfigured)
             {
-                optionsBuilder.UseSqlServer(
-                    "Server=localhost;Database=eCommerce;User ID=sa;Password=MinhaSenha123;",
+                var connectionString = _configuration.GetConnectionString("DefaultConnection");
+                optionsBuilder.UseSqlServer(connectionString,
                     new Action<SqlServerDbContextOptionsBuilder>(options =>
                     {
                         options.EnableRetryOnFailure(
@@ -38,6 +48,18 @@ namespace eCommerce.Infrastructure.Context
             }
         }
 
+        
+
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+            modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
+            //modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+            //modelBuilder.ApplyConfiguration(new BrokerConfiguration());
+
+        }
+
         // DbSet para cada entidade
         public DbSet<Broker> Brokers { get; set; }
         public DbSet<Varejista> Varejistas { get; set; }
@@ -46,13 +68,5 @@ namespace eCommerce.Infrastructure.Context
         public DbSet<Historicos> Historicos { get; set; }
         public DbSet<LogImportacaoVarejoDetalhe> LogImportacaoVarejoDetalhes { get; set; }
 
-
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
-        }
-
-
-        
     }
 }
