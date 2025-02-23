@@ -11,7 +11,7 @@ using eCommerce.Domain.Events;
 using eCommerce.Domain.Validations;
 using eCommerce.Domain.Exceptions;
 
-namespace eCommerce.Domain.Entities.Usuarios
+namespace eCommerce.Domain.Entities
 {
     /// <summary>
     /// Entidade que representa um usuário no sistema

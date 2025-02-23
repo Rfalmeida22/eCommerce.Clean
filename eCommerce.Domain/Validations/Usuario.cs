@@ -1,4 +1,4 @@
-using eCommerce.Domain.Entities.Usuarios;
+using eCommerce.Domain.Entities;
 
 namespace eCommerce.Domain.Validations
 {
