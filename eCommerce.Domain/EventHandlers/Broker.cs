@@ -14,8 +14,9 @@ namespace eCommerce.Domain.EventHandlers
 
         public async Task HandleAsync(Events.Broker @event)
         {
-            _logger.LogInformation($"Broker criado: {event.Nome} (ID: {event.BrokerId}) por {event.UserName} em {event.OccurredOn}");
+            _logger.LogInformation("Broker atualizado: {BrokerId}, Nome: {Nome}", @event.BrokerId, @event.Nome);
             // Aqui poderia criar acessos, notificar sistemas, etc
         }
     }
+   
 } 

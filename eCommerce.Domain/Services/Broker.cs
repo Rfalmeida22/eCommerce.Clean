@@ -62,6 +62,10 @@ namespace eCommerce.Domain.Services
                     _logger.LogWarning("Broker {BrokerId} is not linked to Varejista {VarejistaId}", brokerId, varejistaId);
                 }
 
+                // Publicar evento de domínio
+                var evento = new Events.Broker(brokerId, "Nome do Broker", "Nome do Usuário");
+                await _eventDispatcher.PublishAsync(evento);
+
                 return isValid;
             }
             catch (Exception ex)

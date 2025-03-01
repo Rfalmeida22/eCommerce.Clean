@@ -18,10 +18,6 @@ namespace eCommerce.Domain.Entities
     /// </summary>
     public class Usuarios : BaseEntity
     {
-        private const int NOME_MAX_LENGTH = 100;
-        private const int EMAIL_MAX_LENGTH = 200;
-        private const int SENHA_MAX_LENGTH = 200;
-        private const string EMAIL_REGEX = @"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$";
 
         #region Propriedades
         /// <summary>
@@ -206,11 +202,6 @@ namespace eCommerce.Domain.Entities
             Usuarios_Ati = false;
             SetUpdatedBy(updatedBy);
 
-            // Adicionar evento
-            //AddDomainEvent(new UsuarioDesativado(
-            //    Usuarios_Cod,
-            //    Usuarios_Nom,
-            //    updatedBy));
         }
 
 
@@ -229,13 +220,13 @@ namespace eCommerce.Domain.Entities
         {
             var usuario = new Usuarios(nome, email, cpf, senha, idBroker, idLoja, idVarejista);
             usuario.SetCreatedBy(createdBy);
-            
+
             // Adicionar evento
-            //usuario.AddDomainEvent(new Usuario(
-            //    usuario.Usuarios_Cod,
-            //    usuario.Usuarios_Nom,
-            //    usuario.Usuarios_Ema,
-            //    createdBy));
+            usuario.AddDomainEvent(new Events.Usuario(
+                usuario.Usuarios_Cod,
+                usuario.Usuarios_Nom,
+                usuario.Usuarios_Ema,
+                createdBy));
 
             return usuario;
         }

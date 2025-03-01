@@ -145,11 +145,11 @@ namespace eCommerce.Domain.Entities
             varejista.SetCreatedBy(createdBy);
 
             // Adicionar evento
-            //varejista.AddDomainEvent(new Varejista(
-            //    varejista.IdVarejista,
-            //    varejista.NmVarejista,
-            //    varejista.CdCnpj,
-            //    createdBy));
+            varejista.AddDomainEvent(new Events.Varejista(
+                varejista.IdVarejista,
+                varejista.NmVarejista,
+                varejista.CdCnpj,
+                createdBy));
 
             return varejista;
         }

@@ -14,7 +14,7 @@ namespace eCommerce.Domain.EventHandlers
 
         public async Task HandleAsync(Events.BrokerVarejista @event)
         {
-            _logger.LogInformation($"Broker {event.BrokerId} vinculado ao Varejista {event.VarejistaId} por {event.UserName} em {event.OccurredOn}");
+            _logger.LogInformation($"Broker {@event.BrokerId} vinculado ao Varejista {@event.VarejistaId} por {@event.UserName} em {@event.OccurredOn}");
             // Aqui poderia atualizar permissões, sincronizar dados, etc
         }
     }

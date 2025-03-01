@@ -149,12 +149,12 @@ namespace eCommerce.Domain.Entities
             loja.SetCreatedBy(createdBy);
 
             // Adicionar evento
-            //loja.AddDomainEvent(new Loja(
-            //    loja.IdLoja,
-            //    loja.NmLoja,
-            //    loja.CdCnpj,
-            //    loja.IdVarejista,
-            //    createdBy));
+            loja.AddDomainEvent(new Events.Loja(
+                loja.IdLoja,
+                loja.NmLoja,
+                loja.CdCnpj,
+                loja.IdVarejista,
+                createdBy));
 
             return loja;
         }

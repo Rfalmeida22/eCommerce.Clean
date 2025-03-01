@@ -14,7 +14,7 @@ namespace eCommerce.Domain.EventHandlers
 
         public async Task HandleAsync(Events.Varejista @event)
         {
-            _logger.LogInformation($"Varejista criado: {event.Nome} (CNPJ: {event.Cnpj}) por {event.UserName} em {event.OccurredOn}");
+            _logger.LogInformation($"Varejista criado: {@event.Nome} (CNPJ: {@event.Cnpj}) por {@event.UserName} em {@event.OccurredOn}");
             // Aqui poderia criar estruturas iniciais, notificar sistemas, etc
         }
     }
