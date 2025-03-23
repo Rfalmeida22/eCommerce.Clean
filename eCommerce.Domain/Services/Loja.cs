@@ -1,6 +1,7 @@
 using eCommerce.Domain.Events;
 using eCommerce.Domain.Interfaces;
 using Microsoft.Extensions.Logging;
+using eCommerce.Domain.Exceptions;
 
 namespace eCommerce.Domain.Services
 {
@@ -24,6 +25,115 @@ namespace eCommerce.Domain.Services
             _lojaRepository = lojaRepository ?? throw new ArgumentNullException(nameof(lojaRepository));
             _eventDispatcher = eventDispatcher ?? throw new ArgumentNullException(nameof(eventDispatcher));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        }
+
+
+        /// <summary>
+        /// Cadastra uma nova Loja no sistema.
+        /// </summary>
+        /// <param name="cnpj"></param>
+        /// <param name="codigoLoja"></param>
+        /// <param name="idLojista"></param>
+        /// <param name="idVarejista"></param>
+        /// <param name="nomeLoja"></param>
+        /// <param name="endereco"></param>
+        /// <param name="createdBy"></param>
+        /// <returns></returns>
+        /// <exception cref="DomainException"></exception>
+        public async Task<Entities.Lojas> CadastrarLojaAsync(string cnpj, string codigoLoja, int idLojista, int idVarejista, string nomeLoja, string endereco, string createdBy)
+        {
+            try
+            {
+                // 1. Verifica se já existe loja com mesmo CNPJ
+                if (!await ValidarCnpjUnicoAsync(cnpj))
+                {
+                    _logger.LogWarning("Loja com CNPJ {Cnpj} já existe", cnpj);
+                    throw new DomainException($"Já existe uma Loja com o CNPJ {cnpj}");
+                }
+
+                // 2. Verifica se já existe loja com mesmo código
+                if (!await ValidarCodigoUnicoAsync(codigoLoja))
+                {
+                    _logger.LogWarning("Loja com código {Codigo} já existe", codigoLoja);
+                    throw new DomainException($"Já existe uma Loja com o código {codigoLoja}");
+                }
+
+                // 3. Cria uma nova instância de loja
+                var loja = Entities.Lojas.Create(cnpj, codigoLoja, idLojista, idVarejista, nomeLoja, endereco, createdBy);
+
+                // 4. Salva no banco de dados
+                await _lojaRepository.AddAsync(loja);
+
+                // 5. Registra log de sucesso
+                _logger.LogInformation("Loja {Nome} cadastrada com sucesso. Id: {Id}", nomeLoja, loja.IdLoja);
+
+                return loja;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro ao cadastrar Loja {Nome}", nomeLoja);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Atualiza os dados de uma Loja no sistema.
+        /// </summary>
+        /// <param name="idLoja"></param>
+        /// <param name="cnpj"></param>
+        /// <param name="codigoLoja"></param>
+        /// <param name="idLojista"></param>
+        /// <param name="idVarejista"></param>
+        /// <param name="nomeLoja"></param>
+        /// <param name="endereco"></param>
+        /// <param name="updatedBy"></param>
+        /// <returns></returns>
+        /// <exception cref="DomainException"></exception>
+        public async Task<Entities.Lojas> AtualizarLojaAsync(int idLoja, string cnpj, string codigoLoja, int idLojista, int idVarejista, string nomeLoja, string endereco, string updatedBy)
+        {
+            try
+            {
+                // 1. Verifica se a loja existe
+                if (!await _lojaRepository.ExistsAsync(idLoja))
+                {
+                    _logger.LogWarning("Loja com ID {Id} não existe", idLoja);
+                    throw new DomainException($"Loja com ID {idLoja} não existe");
+                }
+
+                // 2. Verifica se já existe loja com mesmo CNPJ
+                if (!await ValidarCnpjUnicoAsync(cnpj))
+                {
+                    _logger.LogWarning("Loja com CNPJ {Cnpj} já existe", cnpj);
+                    throw new DomainException($"Já existe uma Loja com o CNPJ {cnpj}");
+                }
+
+                // 3. Verifica se já existe loja com mesmo código
+                if (!await ValidarCodigoUnicoAsync(codigoLoja))
+                {
+                    _logger.LogWarning("Loja com código {Codigo} já existe", codigoLoja);
+                    throw new DomainException($"Já existe uma Loja com o código {codigoLoja}");
+                }
+
+                // 4. Atualiza os dados da loja
+                var loja = await _lojaRepository.GetByIdAsync(idLoja);
+
+                loja.AtualizarDados(cnpj, codigoLoja, idLojista, idVarejista, nomeLoja, endereco, updatedBy);
+
+                // 5. Salva no banco de dados
+                await _lojaRepository.UpdateAsync(loja);
+
+                // 6. Registra log de sucesso
+                _logger.LogInformation("Loja {Nome} atualizada com sucesso. Id: {Id}", nomeLoja, loja.IdLoja);
+
+                return loja;
+
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro ao atualizar Loja {Nome}", nomeLoja);
+                throw;
+            }
         }
 
         /// <summary>

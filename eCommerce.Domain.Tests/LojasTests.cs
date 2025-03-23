@@ -142,6 +142,125 @@ namespace eCommerce.Domain.Tests
             }
 
             /// <summary>
+            /// Testa o cadastro de uma nova Loja com dados válidos.
+            /// </summary>
+            /// <returns></returns>
+            [Fact]
+            public async Task CadastrarLojaAsync_ValidData_ShouldCreateLoja()
+            {
+                // Arrange
+                var cnpj = "12345678000195";
+                var codigoLoja = "001";
+                var idLojista = 1;
+                var idVarejista = 1;
+                var nomeLoja = "Loja Teste";
+                var endereco = "Endereço Teste";
+                var createdBy = "Usuário Teste";
+
+                // Cria uma nova instância de Loja
+                var loja = Lojas.Create(cnpj, codigoLoja, idLojista, idVarejista, nomeLoja, endereco, createdBy);
+
+                // Mock do método AddAsync do repositório
+                _lojaRepositoryMock.Setup(repo => repo.AddAsync(It.IsAny<Lojas>())).Returns(Task.CompletedTask);
+                
+                // Act
+                var result = await _lojaService.CadastrarLojaAsync(cnpj, codigoLoja, idLojista, idVarejista, nomeLoja, endereco, createdBy);
+                
+                // Assert
+                Assert.NotNull(result);
+
+                // Verifica se o método AddAsync foi chamado
+                _lojaRepositoryMock.Verify(repo => repo.AddAsync(It.IsAny<Lojas>()), Times.Once);
+            }
+
+            /// <summary>
+            /// Testa o cadastro de uma nova Loja com dados inválidos.
+            /// </summary>
+            /// <returns></returns>
+            [Fact]
+            public async Task CadastrarLojaAsync_InvalidData_ShouldThrowDomainException()
+            {
+                // Arrange
+                var cnpj = ""; // CNPJ inválido
+                var codigoLoja = "001";
+                var idLojista = 1;
+                var idVarejista = 1;
+                var nomeLoja = "Loja Teste";
+                var endereco = "Endereço Teste";
+                var createdBy = "Usuário Teste";
+
+                // Act & Assert
+                await Assert.ThrowsAsync<DomainException>(() => _lojaService.CadastrarLojaAsync(cnpj, codigoLoja, idLojista, idVarejista, nomeLoja, endereco, createdBy));
+            }
+
+            /// <summary>
+            /// Testa a atualização de uma Loja com dados válidos.
+            /// </summary>
+            /// <returns></returns>
+            [Fact]
+            public async Task AtualizarLojaAsync_ValidData_ShouldUpdateLoja()
+            {
+                // Arrange
+                var lojaId = 1;
+                var cnpj = "12345678000195";
+                var codigoLoja = "001";
+                var idLojista = 1;
+                var idVarejista = 1;
+                var nomeLoja = "Loja Teste";
+                var endereco = "Endereço Teste";
+                var createdBy = "Usuário Teste";
+                var updatedBy = "Usuário Atualizado";
+
+                // Cria uma nova instância de Loja
+                var loja = Lojas.Create(cnpj, codigoLoja, idLojista, idVarejista, nomeLoja, endereco, createdBy);
+                // Define o ID da Loja
+                var idLojaProperty = loja.GetType().GetProperty("IdLoja");
+                if (idLojaProperty != null)
+                {
+                    idLojaProperty.SetValue(loja, lojaId);
+                }
+
+                // Mock do método GetByIdAsync do repositório
+                _lojaRepositoryMock.Setup(repo => repo.GetByIdAsync(lojaId)).ReturnsAsync(loja);
+                // Mock do método UpdateAsync do repositório
+                _lojaRepositoryMock.Setup(repo => repo.UpdateAsync(It.IsAny<Lojas>())).Returns(Task.CompletedTask);
+                
+                // Act
+                var result = await _lojaService.AtualizarLojaAsync(lojaId, cnpj, codigoLoja, idLojista, idVarejista, nomeLoja, endereco, updatedBy);
+                
+                // Assert
+                Assert.NotNull(result);
+                Assert.Equal(updatedBy, loja.UpdatedBy);
+                
+                // Verifica se o método GetByIdAsync foi chamado
+                _lojaRepositoryMock.Verify(repo => repo.GetByIdAsync(lojaId), Times.Once);
+                // Verifica se o método UpdateAsync foi chamado
+                _lojaRepositoryMock.Verify(repo => repo.UpdateAsync(It.IsAny<Lojas>()), Times.Once);
+            }
+
+            /// <summary>
+            /// Testa a atualização de uma Loja com dados inválidos.
+            /// </summary>
+            /// <returns></returns>
+            [Fact]
+            public async Task AtualizarLojaAsync_InvalidData_ShouldThrowDomainException()
+            {
+                // Arrange
+                var lojaId = 1;
+                var cnpj = ""; // CNPJ inválido
+                var codigoLoja = "001";
+                var idLojista = 1;
+                var idVarejista = 1;
+                var nomeLoja = "Loja Teste";
+                var endereco = "Endereço Teste";
+                var createdBy = "Usuário Teste";
+                var updatedBy = "Usuário Atualizado";
+                
+                // Act & Assert
+                await Assert.ThrowsAsync<DomainException>(() => _lojaService.AtualizarLojaAsync(lojaId, cnpj, codigoLoja, idLojista, idVarejista, nomeLoja, endereco, updatedBy));
+            }
+
+            /// <summary>
             /// Testa a validação de vínculo de uma Loja com um Varejista e a publicação de um evento.
             /// </summary>
             [Fact]

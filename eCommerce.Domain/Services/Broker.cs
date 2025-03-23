@@ -1,5 +1,7 @@
 using eCommerce.Domain.Events;
+using eCommerce.Domain.Exceptions;
 using eCommerce.Domain.Interfaces;
+using eCommerce.Domain.Entities;
 using Microsoft.Extensions.Logging;
 
 namespace eCommerce.Domain.Services
@@ -25,6 +27,86 @@ namespace eCommerce.Domain.Services
             _brokerRepository = brokerRepository ?? throw new ArgumentNullException(nameof(brokerRepository));
             _eventDispatcher = eventDispatcher ?? throw new ArgumentNullException(nameof(eventDispatcher));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        }
+
+        /// <summary>
+        /// Cadastra um novo Broker no sistema.
+        /// </summary>
+        /// <param name="nome">Nome do Broker.</param>
+        /// <param name="createdBy">Usuário que está criando o Broker.</param>
+        /// <returns>Broker cadastrado.</returns>
+        public async Task<Entities.Broker> CadasatrarBrokerAsync(string nome, string createdBy)
+        {
+            try 
+            {
+                // 1. Verifica se já existe broker com mesmo nome
+                if (await _brokerRepository.ExistsByNomeAsync(nome))
+                {
+                    _logger.LogWarning("Broker {Nome} já existe", nome);
+                    throw new DomainException($"Já existe um Broker com o nome {nome}");
+                }
+
+                // 2. Cria uma nova instância de Broker
+                var broker = Entities.Broker.Create(nome, createdBy);
+
+                // 3. Salva no banco de dados
+                await _brokerRepository.AddAsync(broker);
+
+                // 4. Registra log de sucesso
+                _logger.LogInformation("Broker {Nome} cadastrado com sucesso. Id: {Id}", nome, broker.IdBroker);
+
+                return broker;
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro ao cadastrar Broker {Nome}", nome);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Atualiza os dados de um Broker existente.
+        /// </summary>
+        /// <param name="brokerId">ID do Broker.</param>
+        /// <param name="novoNome">Novo nome do Broker.</param>
+        /// <param name="updatedBy">Usuário que está atualizando o Broker.</param>
+        /// <returns>Broker atualizado.</returns>
+        public async Task<Entities.Broker> AtualizarBrokerAsync(int brokerId, string novoNome, string updatedby)
+        {
+            try
+            {
+                // 1. Verifica se o broker existe
+                var broker = await _brokerRepository.GetByIdAsync(brokerId);
+                if (broker == null)
+                {
+                    _logger.LogWarning("Broker {BrokerId} não encontrado", brokerId);
+                    throw new DomainException($"Broker {brokerId} não encontrado");
+                }
+
+                // 2. Verifica se já existe outro broker com o mesmo nome
+                if (await _brokerRepository.ExistsByNomeAsync(novoNome, brokerId))
+                {
+                    _logger.LogWarning("Já existe um Broker com o nome {Nome}", novoNome);
+                    throw new DomainException($"Já existe um Broker com o nome {novoNome}");
+                }
+
+                // 3. Atualiza os dados
+                broker.AtualizarDados(novoNome, updatedby);
+
+                // 4. Salva no banco de dados
+                await _brokerRepository.UpdateAsync(broker);
+
+                // 5. Registra log de sucesso
+                _logger.LogInformation("Broker {BrokerId} atualizado com sucesso. Novo nome: {NovoNome}", brokerId, novoNome);
+
+                return broker;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro ao atualizar Broker {BrokerId}", brokerId);
+                throw;
+            }
         }
 
         /// <summary>

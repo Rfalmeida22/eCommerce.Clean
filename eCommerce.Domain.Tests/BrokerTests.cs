@@ -80,6 +80,125 @@ namespace eCommerce.Domain.Tests
             }
 
             /// <summary>
+            /// Testa o cadastro de um novo Broker com dados válidos.
+            /// Deve criar o Broker com sucesso quando o nome não existe.
+            /// </summary>
+            [Fact]
+            public async Task CadastrarBrokerAsync_ValidData_ShouldCreateBroker() 
+            {
+                // Arrange
+                var nome = "Novo Broker Teste";
+                var createdBy = "Usuário Teste";
+                // Configura o mock para simular que o nome não existe no banco
+                _brokerRepositoryMock.Setup(repo => repo.ExistsByNomeAsync(nome, null)).ReturnsAsync(false);
+                // Configura o mock para simular o salvamento com sucesso
+                _brokerRepositoryMock.Setup(repo => repo.AddAsync(It.IsAny<Entities.Broker>())).Returns(Task.CompletedTask);
+
+                // Act
+                var result = await _brokerService.CadasatrarBrokerAsync(nome, createdBy);
+
+
+                // Assert
+                Assert.NotNull(result);
+                Assert.Equal(nome, result.NmBroker);
+                Assert.Equal(createdBy, result.CreatedBy);
+                Assert.True(result.IsActive);
+
+                // Verifica se o método AddAsync foi chamado exatamente uma vez
+                _brokerRepositoryMock.Verify(repo => repo.AddAsync(It.IsAny<Entities.Broker>()), Times.Once);
+
+                // Verifica se o método ExistsByNomeAsync foi chamado com o nome correto
+                _brokerRepositoryMock.Verify(repo => repo.ExistsByNomeAsync(nome, null), Times.Once);
+            }
+
+            /// <summary>
+            /// Testa o cadastro de um Broker com nome duplicado.
+            /// Deve lançar DomainException quando o nome já existe.
+            /// </summary>
+            [Fact]
+            public async Task CadastrarBrokerAsync_DuplicatedName_ShouldThrowDomainException()
+            {
+                // Arrange
+                var nome = "Broker Existente";
+                var createdBy = "Usuário Teste";
+                _brokerRepositoryMock.Setup(repo => repo.ExistsByNomeAsync(nome, null)).ReturnsAsync(true);
+
+                // Act & Assert
+                await Assert.ThrowsAsync<DomainException>(() => _brokerService.CadasatrarBrokerAsync(nome, createdBy));
+            }
+
+            /// <summary>
+            /// Testa a atualização de um Broker existente com dados válidos.
+            /// Deve atualizar o Broker com sucesso.
+            /// </summary>
+            [Fact]
+            public async Task AtualizarBrokerAsync_ValidData_ShouldUpdateBroker()
+            {
+                // Arrange
+                var brokerId = 1;
+                var novoNome = "Broker Atualizado";
+                var updatedBy = "Usuário Teste";
+                var brokerExistente = Entities.Broker.Create("Broker Original", "Usuário Original");
+                var brokerProperty = brokerExistente.GetType().GetProperty("IdBroker");
+
+                if (brokerProperty != null)
+                {
+                    brokerProperty.SetValue(brokerExistente, brokerId);
+                }
+
+                _brokerRepositoryMock.Setup(repo => repo.GetByIdAsync(brokerId)).ReturnsAsync(brokerExistente);
+                _brokerRepositoryMock.Setup(repo => repo.ExistsByNomeAsync(novoNome, brokerId)).ReturnsAsync(false);
+                _brokerRepositoryMock.Setup(repo => repo.UpdateAsync(It.IsAny<Entities.Broker>())).Returns(Task.CompletedTask);
+
+                // Act
+                var result = await _brokerService.AtualizarBrokerAsync(brokerId, novoNome, updatedBy);
+
+                // Assert
+                Assert.NotNull(result);
+                Assert.Equal(novoNome, result.NmBroker);
+                _brokerRepositoryMock.Verify(repo => repo.UpdateAsync(It.IsAny<Entities.Broker>()), Times.Once);
+            }
+
+            /// <summary>
+            /// Testa a atualização de um Broker inexistente.
+            /// Deve lançar DomainException quando o Broker não existe.
+            /// </summary>
+            [Fact]
+            public async Task AtualizarBrokerAsync_NonexistentBroker_ShouldThrowDomainException()
+            {
+                // Arrange
+                var brokerId = 999;
+                var novoNome = "Broker Atualizado";
+                var updatedBy = "Usuário Teste";
+                _brokerRepositoryMock.Setup(repo => repo.GetByIdAsync(brokerId)).ReturnsAsync((Entities.Broker)null);
+
+                // Act & Assert
+                await Assert.ThrowsAsync<DomainException>(() =>
+                    _brokerService.AtualizarBrokerAsync(brokerId, novoNome, updatedBy));
+            }
+
+            /// <summary>
+            /// Testa a atualização de um Broker com nome duplicado.
+            /// Deve lançar DomainException quando o novo nome já existe para outro Broker.
+            /// </summary>
+            [Fact]
+            public async Task AtualizarBrokerAsync_DuplicatedName_ShouldThrowDomainException()
+            {
+                // Arrange
+                var brokerId = 1;
+                var novoNome = "Broker Duplicado";
+                var updatedBy = "Usuário Teste";
+                var brokerExistente = Entities.Broker.Create("Broker Original", "Usuário Original");
+
+                _brokerRepositoryMock.Setup(repo => repo.GetByIdAsync(brokerId)).ReturnsAsync(brokerExistente);
+                _brokerRepositoryMock.Setup(repo => repo.ExistsByNomeAsync(novoNome, brokerId)).ReturnsAsync(true);
+
+                // Act & Assert
+                await Assert.ThrowsAsync<DomainException>(() =>
+                    _brokerService.AtualizarBrokerAsync(brokerId, novoNome, updatedBy));
+            }
+
+            /// <summary>
             /// Testa a validação de vínculo de um Broker com um Varejista e a publicação de um evento.
             /// </summary>
             [Fact]
