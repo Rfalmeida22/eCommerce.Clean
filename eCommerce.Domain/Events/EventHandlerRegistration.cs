@@ -21,6 +21,7 @@ namespace eCommerce.Domain.Events
             services.AddScoped<IEventHandler<Loja>, EventHandlers.Loja>();
             services.AddScoped<IEventHandler<Usuario>, EventHandlers.Usuario>();
             services.AddScoped<IEventHandler<Varejista>, EventHandlers.Varejista>();
+            services.AddScoped<IEventHandler<Historicos>, EventHandlers.Historicos>();
 
             // Registra o despachante de eventos
             services.AddScoped<IEventDispatcher, EventDispatcher>();

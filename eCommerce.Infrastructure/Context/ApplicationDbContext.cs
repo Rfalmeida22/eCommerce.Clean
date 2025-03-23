@@ -1,5 +1,4 @@
-﻿using eCommerce.Domain.Entities.Usuarios;
-using eCommerce.Domain.Entities;
+﻿using eCommerce.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.SqlServer;
 using System;

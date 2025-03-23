@@ -78,12 +78,83 @@ namespace eCommerce.Domain.Services
 }
 
 /*
- * Sobre DomainService:
+ * Serviço de Domínio Broker (eCommerce.Domain/Services/Broker.cs)
  * 
- * Um DomainService é uma classe que encapsula a lógica de negócios que não pertence a uma entidade ou valor específico.
- * Ele é usado para operações que envolvem múltiplas entidades ou que não se encaixam bem em uma única entidade.
+ * Propósito:
+ * Implementa a lógica de negócios relacionada a operações com Brokers que não se encaixam
+ * naturalmente em uma única entidade. Este serviço atua como uma camada de coordenação
+ * entre diferentes partes do domínio.
  * 
- * No contexto deste projeto, a classe Broker como DomainService é responsável por operações relacionadas a Brokers,
- * como validar vínculos entre Brokers e Varejistas. Ela utiliza repositórios para acessar dados e despachantes de eventos
- * para publicar eventos de domínio quando necessário.
+ * Responsabilidades:
+ * 1. Coordenação de Operações:
+ *    - Validação de vínculos entre Brokers e Varejistas
+ *    - Publicação de eventos de domínio
+ *    - Logging de operações importantes
+ * 
+ * 2. Dependências:
+ *    - IBroker: Repositório para operações de persistência
+ *    - IEventDispatcher: Serviço para publicação de eventos
+ *    - ILogger: Serviço para logging
+ * 
+ * Exemplos de Uso:
+ * 
+ * 1. Injeção do Serviço (Startup.cs ou Program.cs):
+ *    services.AddScoped<IBroker, Broker>();
+ *    services.AddScoped<IEventDispatcher, EventDispatcher>();
+ *    services.AddLogging();
+ * 
+ * 2. Validação de Vínculo Broker-Varejista:
+ *    // Em um controller ou application service
+ *    public class BrokerController 
+ *    {
+ *        private readonly Services.Broker _brokerService;
+ *        
+ *        public BrokerController(Services.Broker brokerService)
+ *        {
+ *            _brokerService = brokerService;
+ *        }
+ *        
+ *        public async Task<IActionResult> ValidarVinculo(int brokerId, int varejistaId)
+ *        {
+ *            try 
+ *            {
+ *                var isValid = await _brokerService.ValidarVinculoVarejistaAsync(brokerId, varejistaId);
+ *                return Ok(isValid);
+ *            }
+ *            catch (ArgumentException ex)
+ *            {
+ *                return BadRequest(ex.Message);
+ *            }
+ *        }
+ *    }
+ * 
+ * Fluxo de Execução ValidarVinculoVarejistaAsync:
+ * 1. Valida os parâmetros de entrada (brokerId e varejistaId)
+ * 2. Busca os brokers associados ao varejista
+ * 3. Verifica se o broker específico está na lista
+ * 4. Registra logs de informação ou warning baseado no resultado
+ * 5. Publica um evento de domínio sobre a validação
+ * 6. Retorna o resultado da validação
+ * 
+ * Tratamento de Erros:
+ * - ArgumentException: Quando IDs são inválidos (? 0)
+ * - ArgumentNullException: Quando dependências são nulas
+ * - Logging de erros com detalhes da operação
+ * 
+ * Eventos de Domínio:
+ * - Publica Events.Broker após validação de vínculo
+ * - Permite que outros componentes reajam a mudanças
+ * 
+ * Boas Práticas:
+ * 1. Validação rigorosa de parâmetros
+ * 2. Logging adequado para troubleshooting
+ * 3. Tratamento de exceções com mensagens claras
+ * 4. Uso de injeção de dependência
+ * 5. Separação clara de responsabilidades
+ * 
+ * Observações:
+ * - Serviço stateless (não mantém estado)
+ * - Operações são assíncronas para melhor performance
+ * - Segue princípios SOLID e DDD
+ * - Facilita testes unitários através de dependências injetadas
  */

@@ -29,7 +29,7 @@ namespace eCommerce.Domain.ValueObjects
             return new Cpf(value);
         }
 
-        private static bool IsValid(string cpf)
+        public static bool IsValid(string cpf)
         {
             if (string.IsNullOrWhiteSpace(cpf))
                 return false;

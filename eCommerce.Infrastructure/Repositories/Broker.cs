@@ -1,10 +1,5 @@
 ﻿using eCommerce.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace eCommerce.Infrastructure.Repositories
 {
@@ -29,9 +24,10 @@ namespace eCommerce.Infrastructure.Repositories
         /// </summary>
         /// <param name="entity">Entidade Broker a ser adicionada.</param>
         /// <returns>Tarefa representando a operação assíncrona.</returns>
-        public Task AddAsync(Domain.Entities.Broker entity)
+        public async Task AddAsync(Domain.Entities.Broker entity)
         {
-            throw new NotImplementedException();
+            await _dbContext.Set<Domain.Entities.Broker>().AddAsync(entity);
+            await _dbContext.SaveChangesAsync();
         }
 
         /// <summary>
@@ -39,9 +35,14 @@ namespace eCommerce.Infrastructure.Repositories
         /// </summary>
         /// <param name="id">ID da entidade Broker a ser removida.</param>
         /// <returns>Tarefa representando a operação assíncrona.</returns>
-        public Task DeleteAsync(int id)
+        public async Task DeleteAsync(int id)
         {
-            throw new NotImplementedException();
+            var entity = await GetByIdAsync(id);
+            if (entity != null)
+            {
+                _dbContext.Set<Domain.Entities.Broker>().Remove(entity);
+                await _dbContext.SaveChangesAsync();
+            }
         }
 
         /// <summary>
@@ -49,9 +50,9 @@ namespace eCommerce.Infrastructure.Repositories
         /// </summary>
         /// <param name="id">ID da entidade Broker.</param>
         /// <returns>True se a entidade existe, caso contrário False.</returns>
-        public Task<bool> ExistsAsync(int id)
+        public async Task<bool> ExistsAsync(int id)
         {
-            throw new NotImplementedException();
+            return await _dbContext.Set<Domain.Entities.Broker>().AnyAsync(b => b.IdBroker == id);
         }
 
         /// <summary>
@@ -69,9 +70,9 @@ namespace eCommerce.Infrastructure.Repositories
         /// Obtém todas as entidades Broker do banco de dados.
         /// </summary>
         /// <returns>Lista de todas as entidades Broker.</returns>
-        public Task<IEnumerable<Domain.Entities.Broker>> GetAllAsync()
+        public async Task<IEnumerable<Domain.Entities.Broker>> GetAllAsync()
         {
-            throw new NotImplementedException();
+            return await _dbContext.Set<Domain.Entities.Broker>().ToListAsync();
         }
 
         /// <summary>
@@ -79,9 +80,9 @@ namespace eCommerce.Infrastructure.Repositories
         /// </summary>
         /// <param name="id">ID da entidade Broker.</param>
         /// <returns>Entidade Broker correspondente ao ID.</returns>
-        public Task<Domain.Entities.Broker> GetByIdAsync(int id)
+        public async Task<Domain.Entities.Broker> GetByIdAsync(int id)
         {
-            throw new NotImplementedException();
+            return await _dbContext.Set<Domain.Entities.Broker>().FirstOrDefaultAsync(b => b.IdBroker == id);
         }
 
         /// <summary>
@@ -101,6 +102,7 @@ namespace eCommerce.Infrastructure.Repositories
         /// <returns>Lista de entidades Broker associadas ao Varejista.</returns>
         public async Task<IEnumerable<Domain.Entities.Broker>> GetByVarejistaIdAsync(int varejistaId)
         {
+            //TODO RDG: Implementar método GetByVarejistaIdAsync
             throw new NotImplementedException();
         }
 
@@ -109,9 +111,64 @@ namespace eCommerce.Infrastructure.Repositories
         /// </summary>
         /// <param name="entity">Entidade Broker a ser atualizada.</param>
         /// <returns>Tarefa representando a operação assíncrona.</returns>
-        public Task UpdateAsync(Domain.Entities.Broker entity)
+        public async Task UpdateAsync(Domain.Entities.Broker entity)
         {
-            throw new NotImplementedException();
+            _dbContext.Set<Domain.Entities.Broker>().Update(entity);
+            await _dbContext.SaveChangesAsync();
         }
     }
 }
+
+/*
+ * Repositório Broker (eCommerce.Infrastructure/Repositories/Broker.cs)
+ * 
+ * Propósito:
+ * Esta classe implementa a interface IBroker e é responsável por todas as operações de
+ * persistência relacionadas à entidade Broker no banco de dados.
+ * 
+ * Principais Funcionalidades:
+ * 1. Operações CRUD básicas:
+ *    - AddAsync: Adiciona um novo broker
+ *    - UpdateAsync: Atualiza um broker existente
+ *    - DeleteAsync: Remove um broker pelo ID
+ *    - GetByIdAsync: Obtém um broker específico pelo ID
+ *    - GetAllAsync: Lista todos os brokers
+ *    
+ * 2. Operações Específicas:
+ *    - GetByNomeAsync: Busca um broker pelo nome
+ *    - ExistsByNomeAsync: Verifica duplicidade de nome
+ *    - GetByVarejistaIdAsync: Lista brokers por varejista
+ * 
+ * Exemplos de Uso:
+ * 
+ * 1. Adicionar um novo Broker:
+ *    var broker = Broker.Create("Nome do Broker", "Usuario");
+ *    await _brokerRepository.AddAsync(broker);
+ * 
+ * 2. Atualizar um Broker existente:
+ *    var broker = await _brokerRepository.GetByIdAsync(1);
+ *    broker.AtualizarDados("Novo Nome", "Usuario");
+ *    await _brokerRepository.UpdateAsync(broker);
+ * 
+ * 3. Verificar duplicidade de nome:
+ *    var exists = await _brokerRepository.ExistsByNomeAsync("Nome", ignorarId: 1);
+ * 
+ * 4. Buscar Brokers de um Varejista:
+ *    var brokers = await _brokerRepository.GetByVarejistaIdAsync(varejistaId);
+ * 
+ * Dependências:
+ * - DbContext: Contexto do Entity Framework para acesso ao banco de dados
+ * - IBroker: Interface que define as operações do repositório
+ * 
+ * Observações:
+ * - Todas as operações são assíncronas para melhor performance
+ * - As operações de alteração (Add/Update/Delete) chamam SaveChangesAsync automaticamente
+ * - Implementa padrão Repository para abstrair a camada de persistência
+ * - Utiliza Entity Framework Core para operações no banco de dados
+ * 
+ * Validações:
+ * - Verifica existência da entidade antes de remover
+ * - Permite verificar duplicidade de nome ignorando um ID específico
+ * - Utiliza validações definidas na camada de domínio
+ */
+
